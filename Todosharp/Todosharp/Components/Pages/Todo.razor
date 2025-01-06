@@ -5,6 +5,31 @@
 
 <h1>Todo</h1>
 
+<EditForm Model="@newTodo" OnValidSubmit="@AddTodo">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Name:</label>
+        <InputText @bind-Value="newTodo.Name" class="form-control" />
+    </div>
+    <div>
+        <label>Due Date:</label>
+        <InputDate @bind-Value="newTodo.DueDate" class="form-control" />
+    </div>
+    <div>
+        <label>Status:</label>
+        <InputSelect @bind-Value="newTodo.Status" class="form-control">
+            @foreach (var status in Enum.GetValues<TodoStatus>())
+            {
+                <option value="@status">@status</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add</button>
+</EditForm>
+
 <table class="table">
     <thead>
         <tr>
