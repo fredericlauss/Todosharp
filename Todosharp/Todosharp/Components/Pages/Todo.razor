@@ -1,7 +1,43 @@
 ﻿@page "/todo"
+@rendermode InteractiveServer
 
 <PageTitle>Todo</PageTitle>
 
 <h1>Todo</h1>
 
-Todo
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Due Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var todo in todos)
+        {
+            <tr>
+                <td>@todo.Name</td>
+                <td>@todo.DueDate.ToShortDateString()</td>
+                <td>@todo.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<TodoModel> todos = new();
+    private TodoModel newTodo = new();
+
+    private void AddTodo()
+    {
+        todos.Add(new TodoModel()                
+        {
+         Name = "test",
+         DueDate = DateTime.Now,
+         Status = TodoStatus.ToDo,
+        });
+
+        newTodo = new();
+    }
+}
