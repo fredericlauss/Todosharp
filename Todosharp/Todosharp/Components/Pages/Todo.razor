@@ -30,39 +30,118 @@
     <button type="submit" class="btn btn-primary">Add</button>
 </EditForm>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Due Date</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var todo in todos)
-        {
+@if (todos.Count == 0)
+{
+    <p>No todos yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
             <tr>
-                <td>@todo.Name</td>
-                <td>@todo.DueDate.ToShortDateString()</td>
-                <td>@todo.Status</td>
+                <th>Name</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var todo in todos)
+            {
+                <tr>
+                    <td>@todo.Name</td>
+                    <td>@todo.DueDate.ToShortDateString()</td>
+                    <td>@todo.Status</td>
+                    <td>
+                        <button class="btn btn-secondary" @onclick="() => EditTodo(todo)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteTodo(todo)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (editingTodo != null)
+{
+    <hr />
+    <h4>Edit Todo</h4>
+    <EditForm Model="@editingTodo" OnValidSubmit="@UpdateTodo">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Name:</label>
+            <InputText @bind-Value="editingTodo.Name" class="form-control" />
+        </div>
+        <div>
+            <label>Due Date:</label>
+            <InputDate @bind-Value="editingTodo.DueDate" class="form-control" />
+        </div>
+        <div>
+            <label>Status:</label>
+            <InputSelect @bind-Value="editingTodo.Status" class="form-control">
+                @foreach (var status in Enum.GetValues<TodoStatus>())
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </EditForm>
+}
 
 @code {
     private List<TodoModel> todos = new();
     private TodoModel newTodo = new();
+    private TodoModel? editingTodo = null;
 
     private void AddTodo()
     {
-        todos.Add(new TodoModel()                
-        {
-         Name = "test",
-         DueDate = DateTime.Now,
-         Status = TodoStatus.ToDo,
-        });
+        todos.Add(new TodoModel()
+            {
+                Name = newTodo.Name,
+                DueDate = newTodo.DueDate,
+                Status = newTodo.Status
+            });
 
         newTodo = new();
+    }
+
+    private void EditTodo(TodoModel todo)
+    {
+        editingTodo = new TodoModel()
+            {
+                Name = todo.Name,
+                DueDate = todo.DueDate,
+                Status = todo.Status
+            };
+    }
+
+    private void UpdateTodo()
+    {
+        if (editingTodo != null)
+        {
+            var todo = todos.FirstOrDefault(t => t.Name == editingTodo.Name);
+            if (todo != null)
+            {
+                todo.Name = editingTodo.Name;
+                todo.DueDate = editingTodo.DueDate;
+                todo.Status = editingTodo.Status;
+            }
+            editingTodo = null;
+        }
+    }
+
+    private void DeleteTodo(TodoModel todo)
+    {
+        todos.Remove(todo);
+    }
+
+    private void CancelEdit()
+    {
+        editingTodo = null;
     }
 }
