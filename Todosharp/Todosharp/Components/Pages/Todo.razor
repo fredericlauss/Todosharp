@@ -36,7 +36,7 @@
 }
 else
 {
-    <table class="table">
+    <table id="todoTable" class="table">
         <thead>
             <tr>
                 <th>Name</th>
@@ -48,7 +48,7 @@ else
         <tbody>
             @foreach (var todo in todos)
             {
-                <tr>
+                <tr draggable="true" data-id="@todo.Id">
                     <td>@todo.Name</td>
                     <td>@todo.DueDate.ToShortDateString()</td>
                     <td>@todo.Status</td>
@@ -62,46 +62,42 @@ else
     </table>
 }
 
-@if (editingTodo != null)
-{
-    <hr />
-    <h4>Edit Todo</h4>
-    <EditForm Model="@editingTodo" OnValidSubmit="@UpdateTodo">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div>
-            <label>Name:</label>
-            <InputText @bind-Value="editingTodo.Name" class="form-control" />
-        </div>
-        <div>
-            <label>Due Date:</label>
-            <InputDate @bind-Value="editingTodo.DueDate" class="form-control" />
-        </div>
-        <div>
-            <label>Status:</label>
-            <InputSelect @bind-Value="editingTodo.Status" class="form-control">
-                @foreach (var status in Enum.GetValues<TodoStatus>())
-                {
-                    <option value="@status">@status</option>
-                }
-            </InputSelect>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Update</button>
-        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
-    </EditForm>
-}
-
 @code {
     private List<TodoModel> todos = new();
     private TodoModel newTodo = new();
     private TodoModel? editingTodo = null;
 
+    [Inject] IJSRuntime JSRuntime { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("enableDragAndDrop", "todoTable", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void UpdateOrder(int[] newOrder)
+    {
+        var reorderedTodos = new List<TodoModel>();
+        foreach (var id in newOrder)
+        {
+            var todo = todos.FirstOrDefault(t => t.Id == id);
+            if (todo != null)
+            {
+                reorderedTodos.Add(todo);
+            }
+        }
+        todos = reorderedTodos;
+        StateHasChanged();
+    }
+
     private void AddTodo()
     {
         todos.Add(new TodoModel()
             {
+                Id = todos.Count + 1,
                 Name = newTodo.Name,
                 DueDate = newTodo.DueDate,
                 Status = newTodo.Status
@@ -114,25 +110,11 @@ else
     {
         editingTodo = new TodoModel()
             {
+                Id = todo.Id,
                 Name = todo.Name,
                 DueDate = todo.DueDate,
                 Status = todo.Status
             };
-    }
-
-    private void UpdateTodo()
-    {
-        if (editingTodo != null)
-        {
-            var todo = todos.FirstOrDefault(t => t.Name == editingTodo.Name);
-            if (todo != null)
-            {
-                todo.Name = editingTodo.Name;
-                todo.DueDate = editingTodo.DueDate;
-                todo.Status = editingTodo.Status;
-            }
-            editingTodo = null;
-        }
     }
 
     private void DeleteTodo(TodoModel todo)
@@ -144,12 +126,4 @@ else
     {
         editingTodo = null;
     }
-    //ijsruntime    appelle js
-
-    //api httpclient
-    //gestion des erreurs try catch
-    //cashing avec webassembly
-    //lazy loading
-
-    //oauth jwt token
 }
