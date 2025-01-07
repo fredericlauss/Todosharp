@@ -1,8 +1,8 @@
 ﻿function enableDragAndDrop(tableId, dotNetReference) {
     const table = document.getElementById(tableId);
-
+    console.log("table ? ")
     if (!table) return;
-
+    console.log("start")
     let draggedRow = null;
 
     table.addEventListener('dragstart', (event) => {

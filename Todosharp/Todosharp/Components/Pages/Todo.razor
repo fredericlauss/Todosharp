@@ -97,31 +97,17 @@ else
     private List<TodoModel> todos = new();
     private TodoModel newTodo = new();
     private TodoModel? editingTodo = null;
+    private bool shouldRefreshDragAndDrop = false;
 
     [Inject] IJSRuntime JSRuntime { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender || shouldRefreshDragAndDrop)
         {
             await JSRuntime.InvokeVoidAsync("enableDragAndDrop", "todoTable", DotNetObjectReference.Create(this));
+            shouldRefreshDragAndDrop = false; // Reset after running the script
         }
-    }
-
-    [JSInvokable]
-    public void UpdateOrder(int[] newOrder)
-    {
-        var reorderedTodos = new List<TodoModel>();
-        foreach (var id in newOrder)
-        {
-            var todo = todos.FirstOrDefault(t => t.Id == id);
-            if (todo != null)
-            {
-                reorderedTodos.Add(todo);
-            }
-        }
-        todos = reorderedTodos;
-        StateHasChanged();
     }
 
     private void AddTodo()
@@ -135,6 +121,7 @@ else
             });
 
         newTodo = new();
+        TriggerDragAndDrop();
     }
 
     private void EditTodo(TodoModel todo)
@@ -160,16 +147,25 @@ else
                 todo.Status = editingTodo.Status;
             }
             editingTodo = null;
+            TriggerDragAndDrop();
         }
     }
 
     private void DeleteTodo(TodoModel todo)
     {
         todos.Remove(todo);
+        TriggerDragAndDrop();
     }
 
     private void CancelEdit()
     {
         editingTodo = null;
     }
+
+    private void TriggerDragAndDrop()
+    {
+        shouldRefreshDragAndDrop = true;
+        StateHasChanged(); // Force a re-render to trigger OnAfterRenderAsync
+    }
 }
+
