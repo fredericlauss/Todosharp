@@ -106,7 +106,7 @@ else
         if (firstRender || shouldRefreshDragAndDrop)
         {
             await JSRuntime.InvokeVoidAsync("enableDragAndDrop", "todoTable", DotNetObjectReference.Create(this));
-            shouldRefreshDragAndDrop = false; // Reset after running the script
+            shouldRefreshDragAndDrop = false; 
         }
     }
 
@@ -165,7 +165,7 @@ else
     private void TriggerDragAndDrop()
     {
         shouldRefreshDragAndDrop = true;
-        StateHasChanged(); // Force a re-render to trigger OnAfterRenderAsync
+        StateHasChanged(); // force js reload
     }
 }
 
